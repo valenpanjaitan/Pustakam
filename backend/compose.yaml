@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: buku_db
+      POSTGRES_USER: buku_user
+      POSTGRES_PASSWORD: buku_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+    external: true

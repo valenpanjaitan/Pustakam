@@ -1,0 +1,56 @@
+services:
+
+  db:
+    image: postgres:18
+
+    environment:
+      POSTGRES_DB: buku_db
+      POSTGRES_USER: buku_user
+      POSTGRES_PASSWORD: buku_password
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U buku_user -d buku_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    
+    depends_on:
+      db:
+        condition: service_healthy
+
+    env_file:
+      - ./backend/.env
+    
+    volumes:
+      - django_static:/app/staticfiles
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /
+
+    ports:
+      - "5173:80"
+
+    depends_on:
+      - backend
+    
+    volumes:
+      - django_static:/app/staticfiles:ro
+
+
+volumes:
+  postgres_data:
+    external: true
+
+  django_static:
