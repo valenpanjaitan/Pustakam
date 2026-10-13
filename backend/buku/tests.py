@@ -48,7 +48,7 @@ class BukuAPITests(APITestCase):
         response = self.client.get(self.list_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data["results"]), 1)
 
     def test_get_book_list(self):
         self.authenticate()
@@ -56,7 +56,25 @@ class BukuAPITests(APITestCase):
         response = self.client.get(self.list_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]["title"], "Bumi Manusia")
+        self.assertEqual(response.data["results"][0]["title"], "Bumi Manusia")
+
+    def test_book_list_is_paginated(self):
+        self.authenticate()
+        for index in range(11):
+            Buku.objects.create(title=f"Test Book {index}")
+
+        first_page = self.client.get(self.list_url)
+        second_page = self.client.get(self.list_url, {"page": 2})
+
+        self.assertEqual(first_page.status_code, status.HTTP_200_OK)
+        self.assertEqual(first_page.data["count"], 12)
+        self.assertEqual(len(first_page.data["results"]), 10)
+        self.assertIsNotNone(first_page.data["next"])
+        self.assertIsNone(first_page.data["previous"])
+        self.assertEqual(second_page.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(second_page.data["results"]), 2)
+        self.assertIsNone(second_page.data["next"])
+        self.assertIsNotNone(second_page.data["previous"])
 
     def test_get_book_detail(self):
         self.authenticate()

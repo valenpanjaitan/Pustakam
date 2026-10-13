@@ -8,6 +8,7 @@ from drf_spectacular.utils import (
 )
 
 from .models import Buku
+from .pagination import BukuPagination
 from .serializers import BukuSerializer
 
 
@@ -32,9 +33,20 @@ ValidationErrorResponse = inline_serializer(
     list=extend_schema(
         tags=["Books"],
         summary="List books",
-        description="Return the book collection. Requires a JWT access token.",
+        description=(
+            "Return one page of the book collection. Use the `page` query "
+            "parameter to move between pages. Requires a JWT access token."
+        ),
         responses={
-            200: BukuSerializer(many=True),
+            200: inline_serializer(
+                name="PaginatedBukuList",
+                fields={
+                    "count": serializers.IntegerField(),
+                    "next": serializers.URLField(allow_null=True),
+                    "previous": serializers.URLField(allow_null=True),
+                    "results": BukuSerializer(many=True),
+                },
+            ),
             401: OpenApiResponse(
                 response=AuthenticationErrorResponse,
                 description="Authentication credentials were not provided or invalid.",
@@ -110,6 +122,7 @@ ValidationErrorResponse = inline_serializer(
     ),
 )
 class BukuViewSet(viewsets.ModelViewSet):
-    queryset = Buku.objects.all().order_by("-created_at")
+    queryset = Buku.objects.all().order_by("-created_at", "-id")
     serializer_class = BukuSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = BukuPagination
