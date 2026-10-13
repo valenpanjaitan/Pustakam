@@ -23,14 +23,16 @@ function Books() {
   });
   const [editId, setEditId] = useState(null);
   const [query, setQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const loadBooks = useCallback(async (pageNumber) => {
+  const loadBooks = useCallback(async (pageNumber, signal) => {
     setLoading(true);
     setLoadError(false);
 
     try {
       const response = await api.get("/api/buku/", {
-        params: { page: pageNumber },
+        params: { page: pageNumber, search: searchTerm || undefined },
+        signal,
       });
       setBuku(response.data.results);
       setPagination({
@@ -38,25 +40,34 @@ function Books() {
         next: response.data.next,
         previous: response.data.previous,
       });
-    } catch {
-      setLoadError(true);
+    } catch (error) {
+      if (error.code !== "ERR_CANCELED") setLoadError(true);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
-  }, []);
+  }, [searchTerm]);
 
   useEffect(() => {
-    loadBooks(page);
+    const controller = new AbortController();
+    loadBooks(page, controller.signal);
+    return () => controller.abort();
   }, [loadBooks, page]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setSearchTerm(query.trim());
+      setPage(1);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [query]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (editId !== null) {
-      const response = await api.patch(`/api/buku/${editId}/`, form);
-      setBuku((currentBooks) =>
-        currentBooks.map((item) => item.id === editId ? response.data : item)
-      );
+      await api.patch(`/api/buku/${editId}/`, form);
+      await loadBooks(page);
     } else {
       await api.post("/api/buku/", form);
       if (page === 1) {
@@ -91,9 +102,6 @@ function Books() {
     }
   };
 
-  const filteredBuku = buku.filter((item) =>
-    `${item.title} ${item.writer ?? ""}`.toLowerCase().includes(query.toLowerCase())
-  );
   const totalPages = Math.max(1, Math.ceil(pagination.count / PAGE_SIZE));
 
   return (
@@ -114,13 +122,13 @@ function Books() {
           <div className="section-heading">
             <div>
               <h2>Rak bacaan</h2>
-              <p>{pagination.count} buku · Halaman {page} dari {totalPages}</p>
+              <p>{pagination.count} buku ditemukan · Halaman {page} dari {totalPages}</p>
             </div>
             <label className="search-box">
               <span>⌕</span>
               <input
-                aria-label="Cari di halaman ini"
-                placeholder="Cari di halaman ini"
+                aria-label="Cari judul atau penulis"
+                placeholder="Cari judul atau penulis"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -133,7 +141,7 @@ function Books() {
             <div className="empty-state" role="alert">Koleksi belum dapat dimuat. Coba muat ulang halaman.</div>
           ) : (
             <>
-              <BookList buku={filteredBuku} onEdit={handleEdit} onDelete={handleDelete} />
+              <BookList buku={buku} onEdit={handleEdit} onDelete={handleDelete} />
               <nav className="pagination" aria-label="Navigasi halaman buku">
                 <button
                   className="small-button"

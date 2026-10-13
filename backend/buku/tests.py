@@ -76,6 +76,37 @@ class BukuAPITests(APITestCase):
         self.assertIsNone(second_page.data["next"])
         self.assertIsNotNone(second_page.data["previous"])
 
+    def test_search_matches_book_title(self):
+        self.authenticate()
+
+        response = self.client.get(self.list_url, {"search": "bumi"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["title"], "Bumi Manusia")
+
+    def test_search_matches_book_writer(self):
+        self.authenticate()
+
+        response = self.client.get(self.list_url, {"search": "pramoedya"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["writer"], "Pramoedya Ananta Toer")
+
+    def test_search_results_are_paginated(self):
+        self.authenticate()
+        Buku.objects.create(title="Bumi dan Langit")
+        for index in range(11):
+            Buku.objects.create(title=f"Unrelated Book {index}")
+
+        response = self.client.get(self.list_url, {"search": "bumi", "page": 1})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data["results"]), 2)
+        self.assertIsNone(response.data["next"])
+
     def test_get_book_detail(self):
         self.authenticate()
 

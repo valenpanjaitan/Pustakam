@@ -1,4 +1,4 @@
-from rest_framework import serializers, viewsets
+from rest_framework import filters, serializers, viewsets
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import (
     OpenApiResponse,
@@ -34,19 +34,12 @@ ValidationErrorResponse = inline_serializer(
         tags=["Books"],
         summary="List books",
         description=(
-            "Return one page of the book collection. Use the `page` query "
-            "parameter to move between pages. Requires a JWT access token."
+            "Return one page of the book collection. Use `search` to match "
+            "book titles and writers, and `page` to move through the matching "
+            "results. Requires a JWT access token."
         ),
         responses={
-            200: inline_serializer(
-                name="PaginatedBukuList",
-                fields={
-                    "count": serializers.IntegerField(),
-                    "next": serializers.URLField(allow_null=True),
-                    "previous": serializers.URLField(allow_null=True),
-                    "results": BukuSerializer(many=True),
-                },
-            ),
+            200: BukuSerializer(many=True),
             401: OpenApiResponse(
                 response=AuthenticationErrorResponse,
                 description="Authentication credentials were not provided or invalid.",
@@ -126,3 +119,5 @@ class BukuViewSet(viewsets.ModelViewSet):
     serializer_class = BukuSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = BukuPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["title", "writer"]
