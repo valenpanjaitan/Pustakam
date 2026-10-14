@@ -32,50 +32,50 @@ ValidationErrorResponse = inline_serializer(
 @extend_schema_view(
     list=extend_schema(
         tags=["Books"],
-        summary="List books",
+        summary="Daftar buku",
         description=(
-            "Return one page of the book collection. Use `search` to match "
-            "book titles and writers, and `page` to move through the matching "
-            "results. Requires a JWT access token."
+            "Mengembalikan buku yang cocok dengan judul dan penulis buku, dan"
+            "`page` untuk berpindah melalui hasil yang cocok."
+            "Memerlukan token akses JWT."
         ),
         responses={
             200: BukuSerializer(many=True),
             401: OpenApiResponse(
                 response=AuthenticationErrorResponse,
-                description="Authentication credentials were not provided or invalid.",
+                description="Tidak ada kredensial autentikasi yang diberikan atau tidak valid.",
             ),
         },
     ),
     retrieve=extend_schema(
         tags=["Books"],
-        summary="Get a book",
-        description="Return one book by its database ID. Requires a JWT access token.",
+        summary="Mengambil satu buku",
+        description="Mengembalikan satu buku berdasarkan ID. Memerlukan token akses JWT.",
         responses={
             200: BukuSerializer,
             401: OpenApiResponse(response=AuthenticationErrorResponse),
             404: OpenApiResponse(
                 response=AuthenticationErrorResponse,
-                description="No book exists with this ID.",
+                description="Tidak ada buku yang cocok dengan ID yang diberikan.",
             ),
         },
     ),
     create=extend_schema(
         tags=["Books"],
-        summary="Create a book",
-        description="Create a book. Requires a JWT access token.",
+        summary="Membuat data buku",
+        description="Membuat data buku baru. Memerlukan token akses JWT.",
         responses={
             201: BukuSerializer,
             400: OpenApiResponse(
                 response=ValidationErrorResponse,
-                description="The submitted book data failed validation.",
+                description="Data buku yang dikirim gagal validasi.",
             ),
             401: OpenApiResponse(response=AuthenticationErrorResponse),
         },
     ),
     update=extend_schema(
         tags=["Books"],
-        summary="Replace a book",
-        description="Replace a book's editable fields. Requires a JWT access token.",
+        summary="Mengganti data buku",
+        description="Mengganti data buku yang dapat diedit. Memerlukan token akses JWT.",
         responses={
             200: BukuSerializer,
             400: OpenApiResponse(response=ValidationErrorResponse),
@@ -85,31 +85,31 @@ ValidationErrorResponse = inline_serializer(
     ),
     partial_update=extend_schema(
         tags=["Books"],
-        summary="Update a book",
-        description="Update selected book fields. Requires a JWT access token.",
+        summary="Memperbarui data buku",
+        description="Memperbarui bidang-bidang buku yang dipilih. Memerlukan token akses JWT.",
         responses={
             200: BukuSerializer,
             400: OpenApiResponse(
                 response=ValidationErrorResponse,
-                description="The submitted book data failed validation.",
+                description="Data buku yang dikirim gagal validasi. ",
             ),
             401: OpenApiResponse(response=AuthenticationErrorResponse),
             404: OpenApiResponse(
                 response=AuthenticationErrorResponse,
-                description="No book exists with this ID.",
+                description="Tidak ada buku yang cocok dengan ID yang diberikan.",
             ),
         },
     ),
     destroy=extend_schema(
         tags=["Books"],
-        summary="Delete a book",
-        description="Delete a book by its database ID. Requires a JWT access token.",
+        summary="Menghapus data buku",
+        description="Menghapus data buku berdasarkan ID. Memerlukan token akses JWT.",
         responses={
-            204: OpenApiResponse(description="The book was deleted."),
+            204: OpenApiResponse(description="Buku berhasil dihapus."),
             401: OpenApiResponse(response=AuthenticationErrorResponse),
             404: OpenApiResponse(
                 response=AuthenticationErrorResponse,
-                description="No book exists with this ID.",
+                description="Tidak ada buku yang cocok dengan ID yang diberikan.",
             ),
         },
     ),

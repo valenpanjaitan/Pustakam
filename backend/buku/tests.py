@@ -9,7 +9,6 @@ from .models import Buku
 
 
 class BukuAPITests(APITestCase):
-    """Integration tests for the authenticated Books API."""    
 
     list_url = "/api/buku/"
 
