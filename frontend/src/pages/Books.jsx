@@ -91,7 +91,7 @@ function Books() {
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this book?");
+    const confirmDelete = window.confirm("Apakah Anda yakin ingin menghapus buku ini?");
     if (!confirmDelete) return;
 
     await api.delete(`/api/buku/${id}/`);

@@ -13,16 +13,16 @@ TokenErrorResponse = inline_serializer(
 
 
 class DocumentedTokenObtainPairView(TokenObtainPairView):
-    """Issue a JWT access/refresh pair from username and password."""
+    """Mengembalikan access token dan refresh token baru."""
 
     @extend_schema(
         operation_id="token_obtain_pair",
         tags=["Authentication"],
-        summary="Obtain JWT tokens",
+        summary="Mengambil token JWT.",
         description=(
-            "Submit valid account credentials to receive an access token and "
-            "a refresh token. Use the access token as a Bearer token for "
-            "Books endpoints. This endpoint does not require authentication."
+            "Tambahkan kredensial akun yang valid untuk menerima token akses dan"
+            "token penyegaran. Gunakan token akses sebagai token Bearer untuk"
+            "endpoint Buku. Endpoint ini tidak memerlukan autentikasi."
         ),
         request=inline_serializer(
             name="TokenObtainRequest",
@@ -41,11 +41,11 @@ class DocumentedTokenObtainPairView(TokenObtainPairView):
             ),
             400: OpenApiResponse(
                 response=TokenErrorResponse,
-                description="Required credential fields are missing or malformed.",
+                description="Kredensial yang diperlukan tidak ada atau tidak valid.",
             ),
             401: OpenApiResponse(
                 response=TokenErrorResponse,
-                description="The credentials are invalid or the account is inactive.",
+                description="Kredensial tidak valid atau akun tidak aktif.",
             ),
         },
     )
@@ -54,15 +54,15 @@ class DocumentedTokenObtainPairView(TokenObtainPairView):
 
 
 class DocumentedTokenRefreshView(TokenRefreshView):
-    """Issue a new access token from a valid refresh token."""
+    """Mengembalikan access token baru dari refresh token yang valid."""
 
     @extend_schema(
         operation_id="token_refresh",
         tags=["Authentication"],
-        summary="Refresh JWT access token",
+        summary="Memperbarui access token JWT.",
         description=(
-            "Submit a valid refresh token to receive a new access token. "
-            "This endpoint does not require an access token."
+            "Menggirim refresh token yang valid untuk menerima access token baru."
+            "Gunakan access token sebagai Bearer token untuk endpoint Buku."
         ),
         request=inline_serializer(
             name="TokenRefreshRequest",
@@ -75,11 +75,11 @@ class DocumentedTokenRefreshView(TokenRefreshView):
             ),
             400: OpenApiResponse(
                 response=TokenErrorResponse,
-                description="The refresh field is missing or malformed.",
+                description="Bagian refresh tidak ada atau tidak valid.",
             ),
             401: OpenApiResponse(
                 response=TokenErrorResponse,
-                description="The refresh token is invalid, expired, or revoked.",
+                description="Token penyegaran tidak valid, kedaluwarsa, atau ditarik.",
             ),
         },
     )
