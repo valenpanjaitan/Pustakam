@@ -1,5 +1,6 @@
 from rest_framework import filters, serializers, viewsets
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import (
     OpenApiResponse,
     extend_schema,
@@ -8,6 +9,7 @@ from drf_spectacular.utils import (
 )
 
 from .models import Buku
+from .filters import BukuFilter
 from .pagination import BukuPagination
 from .serializers import BukuSerializer
 
@@ -34,8 +36,10 @@ ValidationErrorResponse = inline_serializer(
         tags=["Books"],
         summary="Daftar buku",
         description=(
-            "Mengembalikan buku yang cocok dengan judul dan penulis buku, dan"
-            "`page` untuk berpindah melalui hasil yang cocok."
+            "Mencari melalui judul atau penulis dengan `search`, mempersempit "
+            "hasil dengan `writer` dan/atau `issued_date`, serta berpindah "
+            "halaman dengan `page`. Filter penulis mencocokkan sebagian teks "
+            "tanpa membedakan huruf besar/kecil; tanggal memakai format YYYY-MM-DD. "
             "Memerlukan token akses JWT."
         ),
         responses={
@@ -119,5 +123,6 @@ class BukuViewSet(viewsets.ModelViewSet):
     serializer_class = BukuSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = BukuPagination
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["title", "writer"]
+    filterset_class = BukuFilter

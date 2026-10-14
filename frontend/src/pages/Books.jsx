@@ -24,14 +24,23 @@ function Books() {
   const [editId, setEditId] = useState(null);
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [writerInput, setWriterInput] = useState("");
+  const [writerFilter, setWriterFilter] = useState("");
+  const [issuedDateInput, setIssuedDateInput] = useState("");
+  const [issuedDateFilter, setIssuedDateFilter] = useState("");
 
   const loadBooks = useCallback(async (pageNumber, signal) => {
     setLoading(true);
     setLoadError(false);
 
     try {
+      const params = { page: pageNumber };
+      if (searchTerm) params.search = searchTerm;
+      if (writerFilter) params.writer = writerFilter;
+      if (issuedDateFilter) params.issued_date = issuedDateFilter;
+
       const response = await api.get("/api/buku/", {
-        params: { page: pageNumber, search: searchTerm || undefined },
+        params,
         signal,
       });
       setBuku(response.data.results);
@@ -45,7 +54,7 @@ function Books() {
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, [searchTerm]);
+  }, [issuedDateFilter, searchTerm, writerFilter]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -56,11 +65,13 @@ function Books() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setSearchTerm(query.trim());
+      setWriterFilter(writerInput.trim());
+      setIssuedDateFilter(issuedDateInput);
       setPage(1);
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
-  }, [query]);
+  }, [issuedDateInput, query, writerInput]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -133,6 +144,39 @@ function Books() {
                 onChange={(event) => setQuery(event.target.value)}
               />
             </label>
+          </div>
+
+          <div className="filter-toolbar" aria-label="Filter koleksi buku">
+            <label className="filter-field">
+              <span>Penulis</span>
+              <input
+                type="text"
+                aria-label="Filter berdasarkan penulis"
+                placeholder="Nama penulis"
+                value={writerInput}
+                onChange={(event) => setWriterInput(event.target.value)}
+              />
+            </label>
+            <label className="filter-field">
+              <span>Tanggal terbit</span>
+              <input
+                type="date"
+                aria-label="Filter berdasarkan tanggal terbit"
+                value={issuedDateInput}
+                onChange={(event) => setIssuedDateInput(event.target.value)}
+              />
+            </label>
+            <button
+              className="small-button clear-filters"
+              type="button"
+              onClick={() => {
+                setQuery("");
+                setWriterInput("");
+                setIssuedDateInput("");
+              }}
+            >
+              Hapus filter
+            </button>
           </div>
 
           {loading ? (

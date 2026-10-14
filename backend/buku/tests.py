@@ -106,6 +106,70 @@ class BukuAPITests(APITestCase):
         self.assertEqual(len(response.data["results"]), 2)
         self.assertIsNone(response.data["next"])
 
+    def test_filter_matches_writer_case_insensitively(self):
+        self.authenticate()
+
+        response = self.client.get(self.list_url, {"writer": "PRAMO"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], self.book.id)
+
+    def test_filter_matches_exact_issued_date(self):
+        self.authenticate()
+
+        response = self.client.get(
+            self.list_url,
+            {"issued_date": "1980-08-01"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], self.book.id)
+
+    def test_invalid_issued_date_filter_is_rejected(self):
+        self.authenticate()
+
+        response = self.client.get(self.list_url, {"issued_date": "not-a-date"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("issued_date", response.data)
+
+    def test_search_and_filters_work_together_with_pagination(self):
+        self.authenticate()
+        for index in range(11):
+            Buku.objects.create(
+                title=f"Bumi Collection {index}",
+                writer="Pramoedya Ananta Toer",
+                issued_date=date(1980, 8, 1),
+            )
+        Buku.objects.create(
+            title="Bumi Different Date",
+            writer="Pramoedya Ananta Toer",
+            issued_date=date(1990, 1, 1),
+        )
+        Buku.objects.create(
+            title="Bumi Different Writer",
+            writer="Another Writer",
+            issued_date=date(1980, 8, 1),
+        )
+        params = {
+            "search": "bumi",
+            "writer": "pramoedya",
+            "issued_date": "1980-08-01",
+        }
+
+        first_page = self.client.get(self.list_url, params)
+        second_page = self.client.get(self.list_url, {**params, "page": 2})
+
+        self.assertEqual(first_page.status_code, status.HTTP_200_OK)
+        self.assertEqual(first_page.data["count"], 12)
+        self.assertEqual(len(first_page.data["results"]), 10)
+        self.assertIsNotNone(first_page.data["next"])
+        self.assertEqual(second_page.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(second_page.data["results"]), 2)
+        self.assertIsNotNone(second_page.data["previous"])
+
     def test_get_book_detail(self):
         self.authenticate()
 
